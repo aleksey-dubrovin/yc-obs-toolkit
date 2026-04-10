@@ -32,17 +32,16 @@ author:
 
 EXAMPLES = r'''
 - name: Create a configuration file
-  aleksey_dubrovin.yandex_cloud_elk.file_writer:
-    path: "{{ config_file_path }}"
-    content: "{{ config_content }}"
-
-- name: Create a file with multi-line content
-  aleksey_dubrovin.yandex_cloud_elk.file_writer:
-    path: /tmp/test.txt
+  aleksey_dubrovin.yc_obs_toolkit.file_writer:
+    path: /etc/myapp/config.ini
     content: |
-      Line 1
-      Line 2
-      Line 3
+      [settings]
+      debug=true
+
+- name: Create a temporary file
+  aleksey_dubrovin.yc_obs_toolkit.file_writer:
+    path: /tmp/test.txt
+    content: "Hello from Ansible module"
 '''
 
 RETURN = r'''
@@ -62,7 +61,6 @@ changed:
 
 import os
 from ansible.module_utils.basic import AnsibleModule
-
 
 def run_module():
     module_args = dict(
@@ -84,7 +82,6 @@ def run_module():
         content=content
     )
 
-    # Проверяем, существует ли файл и совпадает ли содержимое
     file_exists = os.path.exists(path)
     content_matches = False
 
@@ -96,24 +93,19 @@ def run_module():
         except (IOError, OSError):
             pass
 
-    # Если файла нет или содержимое отличается — требуется изменение
     if not file_exists or not content_matches:
         if not module.check_mode:
-            # Создаём директорию, если нужно
             directory = os.path.dirname(path)
             if directory and not os.path.exists(directory):
                 os.makedirs(directory, exist_ok=True)
-            # Записываем содержимое
             with open(path, 'w') as f:
                 f.write(content)
         result['changed'] = True
 
     module.exit_json(**result)
 
-
 def main():
     run_module()
-
 
 if __name__ == '__main__':
     main()

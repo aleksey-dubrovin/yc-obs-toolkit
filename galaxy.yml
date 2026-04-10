@@ -1,10 +1,10 @@
 ---
 namespace: aleksey_dubrovin
-name: yandex_cloud_elk
+name: yc_obs_toolkit
 version: 1.0.0
 readme: README.md
 authors:
-  - Aleksey Dubrovin <aleksey.dubrovin@example.com>
+  - Aleksey Dubrovin <aleksey.vladch@yandex.ru>
 description: >
   Ansible collection for deploying observability stack (ClickHouse, Vector, Lighthouse)
   on Yandex Cloud with EDA, ADK, and AEE support.

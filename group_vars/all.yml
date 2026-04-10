@@ -1,20 +1,33 @@
 ---
 # Yandex Cloud settings
-yc_zone: ru-central1-b
-yc_subnet_name: net-ru-central1-b
+yc_folder_id: "{{ lookup('env', 'YC_FOLDER_ID') }}"
+yc_subnet_name: "{{ lookup('env', 'YC_SUBNET_NAME') }}"
+yc_service_account_key: "{{ lookup('env', 'YC_SERVICE_ACCOUNT_KEY') | default(omit) }}"
 
-# VM defaults
+# VM configuration
+vm_zone: ru-central1-b
 vm_cores: 2
 vm_memory: 4
 vm_disk_size: 20
 vm_disk_type: network-hdd
 vm_preemptible: true
 vm_assign_public_ip: true
-
-# SSH defaults
-vm_ssh_key_path: "{{ lookup('env', 'HOME') }}/.ssh/id_rsa.pub"
-vm_default_user: rocky
+vm_ssh_key_path: "{{ lookup('env', 'HOME') }}/.ssh/aleksey.pub"
+vm_default_user: ubuntu                    # ← изменено с rocky на ubuntu
+vm_image_family: ubuntu-2204-lts           # ← добавлено
 
 # Observability settings
 clickhouse_version: "22.3.3.44"
-vector_version: "0.21.0"
+clickhouse_users:
+  - name: logger
+    password: logger
+    profile: default
+clickhouse_dbs:
+  - name: logs
+
+vector_clickhouse_port: 8123
+vector_clickhouse_database: "logs"
+vector_clickhouse_table: "syslog"
+
+# Inventory
+inventory_output_file: "./inventory_generated.yml"
