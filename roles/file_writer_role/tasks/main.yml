@@ -1,0 +1,5 @@
+---
+- name: Create file using file_writer module
+  aleksey_dubrovin.yandex_cloud_elk.file_writer:
+    path: "{{ file_writer_path }}"
+    content: "{{ file_writer_content }}"

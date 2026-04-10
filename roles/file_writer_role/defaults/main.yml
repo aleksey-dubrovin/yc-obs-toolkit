@@ -1,0 +1,4 @@
+---
+# Defaults for file_writer_role
+file_writer_path: /tmp/default_file.txt
+file_writer_content: "Default content from file_writer_role"

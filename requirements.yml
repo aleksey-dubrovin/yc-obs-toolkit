@@ -1,0 +1,17 @@
+---
+roles:
+  - name: yc_vm
+    src: https://github.com/aleksey-dubrovin/yc-vm-role.git
+    version: main
+
+  - name: yc_inventory
+    src: https://github.com/aleksey-dubrovin/yc-inventory-role.git
+    version: main
+
+  - name: vector
+    src: https://github.com/aleksey-dubrovin/vector-role.git
+    version: main
+
+  - name: lighthouse
+    src: https://github.com/aleksey-dubrovin/lighthouse-role.git
+    version: main

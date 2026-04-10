@@ -1,0 +1,48 @@
+---
+- name: Setup dependencies
+  hosts: localhost
+  gather_facts: no
+  tasks:
+    - name: Install role dependencies
+      ansible.builtin.command:
+        cmd: ansible-galaxy role install -r requirements.yml
+      run_once: true
+      changed_when: false
+
+- name: Create VMs in Yandex Cloud
+  hosts: localhost
+  connection: local
+  gather_facts: true
+  roles:
+    - yc_vm
+    - yc_inventory
+
+- name: Deploy ClickHouse
+  hosts: clickhouse
+  become: true
+  roles:
+    - alexey.setevoi.clickhouse
+
+- name: Deploy Vector
+  hosts: vector
+  become: true
+  roles:
+    - vector
+
+- name: Deploy Lighthouse
+  hosts: lighthouse
+  become: true
+  roles:
+    - lighthouse
+
+- name: Test file_writer module
+  hosts: all
+  become: true
+  roles:
+    - role: file_writer_role
+      vars:
+        file_writer_path: /tmp/observability_test.txt
+        file_writer_content: |
+          Observability stack deployed successfully!
+          Timestamp: {{ ansible_date_time.iso8601 }}
+          Hostname: {{ ansible_hostname }}
