@@ -1,0 +1,20 @@
+---
+# Yandex Cloud settings
+yc_zone: ru-central1-b
+yc_subnet_name: net-ru-central1-b
+
+# VM defaults
+vm_cores: 2
+vm_memory: 4
+vm_disk_size: 20
+vm_disk_type: network-hdd
+vm_preemptible: true
+vm_assign_public_ip: true
+
+# SSH defaults
+vm_ssh_key_path: "{{ lookup('env', 'HOME') }}/.ssh/id_rsa.pub"
+vm_default_user: rocky
+
+# Observability settings
+clickhouse_version: "22.3.3.44"
+vector_version: "0.21.0"

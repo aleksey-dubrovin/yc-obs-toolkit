@@ -14,6 +14,7 @@ short_description: Creates a file with specified content
 description:
   - This module creates a text file on a remote host with the specified content.
   - It is idempotent and will not change the file if the content already matches.
+  - Creates parent directories if they don't exist.
 options:
   path:
     description:
@@ -32,16 +33,16 @@ author:
 EXAMPLES = r'''
 - name: Create a configuration file
   aleksey_dubrovin.yandex_cloud_elk.file_writer:
-    path: /etc/myapp/config.ini
-    content: |
-      [settings]
-      debug=true
-      log_level=INFO
+    path: "{{ config_file_path }}"
+    content: "{{ config_content }}"
 
-- name: Create a temporary file
+- name: Create a file with multi-line content
   aleksey_dubrovin.yandex_cloud_elk.file_writer:
     path: /tmp/test.txt
-    content: "Hello from Ansible module"
+    content: |
+      Line 1
+      Line 2
+      Line 3
 '''
 
 RETURN = r'''
@@ -49,21 +50,19 @@ path:
   description: Path to the file that was created or modified.
   type: str
   returned: always
-  sample: "/tmp/test.txt"
 content:
   description: Content that was written to the file.
   type: str
   returned: always
-  sample: "Hello from Ansible module"
 changed:
   description: Whether the file was created or modified.
   type: bool
   returned: always
-  sample: true
 '''
 
-from ansible.module_utils.basic import AnsibleModule
 import os
+from ansible.module_utils.basic import AnsibleModule
+
 
 def run_module():
     module_args = dict(
@@ -94,7 +93,7 @@ def run_module():
             with open(path, 'r') as f:
                 if f.read() == content:
                     content_matches = True
-        except Exception:
+        except (IOError, OSError):
             pass
 
     # Если файла нет или содержимое отличается — требуется изменение

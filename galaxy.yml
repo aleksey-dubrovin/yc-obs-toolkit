@@ -4,7 +4,7 @@ name: yandex_cloud_elk
 version: 1.0.0
 readme: README.md
 authors:
-  - Aleksey Dubrovin <aleksey.vladch@yandex.ru>
+  - Aleksey Dubrovin <aleksey.dubrovin@example.com>
 description: >
   Ansible collection for deploying observability stack (ClickHouse, Vector, Lighthouse)
   on Yandex Cloud with EDA, ADK, and AEE support.
@@ -24,5 +24,3 @@ repository: https://github.com/aleksey-dubrovin/yc-obs-toolkit
 documentation: https://github.com/aleksey-dubrovin/yc-obs-toolkit
 homepage: https://github.com/aleksey-dubrovin/yc-obs-toolkit
 issues: https://github.com/aleksey-dubrovin/yc-obs-toolkit/issues
-dependencies:
-  "alexey.setevoi.clickhouse": ">=0.14.0"

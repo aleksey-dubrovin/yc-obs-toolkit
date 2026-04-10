@@ -1,0 +1,26 @@
+# Installed roles
+roles/vector/
+roles/lighthouse/
+roles/clickhouse/
+
+# Secrets
+vars/secrets.yml
+*.vault
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Ansible
+*.retry
+.inventory_*
+
+# Collections build
+*.tar.gz
+
+# IDE
+.vscode/
+.idea/
+*.swp

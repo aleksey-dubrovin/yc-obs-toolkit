@@ -1,13 +1,5 @@
 ---
 roles:
-  - name: yc_vm
-    src: https://github.com/aleksey-dubrovin/yc-vm-role.git
-    version: main
-
-  - name: yc_inventory
-    src: https://github.com/aleksey-dubrovin/yc-inventory-role.git
-    version: main
-
   - name: vector
     src: https://github.com/aleksey-dubrovin/vector-role.git
     version: main
@@ -15,3 +7,7 @@ roles:
   - name: lighthouse
     src: https://github.com/aleksey-dubrovin/lighthouse-role.git
     version: main
+
+  - name: clickhouse
+    src: https://github.com/AlexeySetevoi/ansible-clickhouse.git
+    version: "1.13"

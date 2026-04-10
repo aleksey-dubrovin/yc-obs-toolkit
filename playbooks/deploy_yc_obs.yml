@@ -1,27 +1,84 @@
 ---
-- name: Setup dependencies
-  hosts: localhost
-  gather_facts: no
-  tasks:
-    - name: Install role dependencies
-      ansible.builtin.command:
-        cmd: ansible-galaxy role install -r requirements.yml
-      run_once: true
-      changed_when: false
-
-- name: Create VMs in Yandex Cloud
+- name: Deploy observability stack on Yandex Cloud
   hosts: localhost
   connection: local
   gather_facts: true
-  roles:
-    - yc_vm
-    - yc_inventory
+  vars:
+    # Yandex Cloud credentials (должны быть переданы извне)
+    yc_folder_id: "{{ lookup('env', 'YC_FOLDER_ID') }}"
+    yc_subnet_name: "{{ lookup('env', 'YC_SUBNET_NAME') }}"
+    yc_service_account_key: "{{ lookup('env', 'YC_SERVICE_ACCOUNT_KEY') | default(omit) }}"
+    
+    # VM configuration
+    vm_ssh_key_path: "{{ lookup('env', 'VM_SSH_KEY_PATH') | default('~/.ssh/id_rsa.pub') }}"
+    vm_default_user: "{{ lookup('env', 'VM_DEFAULT_USER') | default('rocky') }}"
+    vm_zone: "{{ lookup('env', 'VM_ZONE') | default('ru-central1-b') }}"
+    
+    # Inventory configuration
+    inventory_output_file: "./inventory_generated.yml"
+    
+    # Timestamp for unique VM names
+    timestamp: "{{ ansible_date_time.epoch }}"
+
+  tasks:
+    - name: Create ClickHouse VM
+      aleksey_dubrovin.yandex_cloud_elk.yc_vm:
+        name: "clickhouse-{{ timestamp }}"
+        folder_id: "{{ yc_folder_id }}"
+        subnet_name: "{{ yc_subnet_name }}"
+        zone: "{{ vm_zone }}"
+        ssh_key_path: "{{ vm_ssh_key_path }}"
+        vm_user: "{{ vm_default_user }}"
+        service_account_key: "{{ yc_service_account_key | default(omit) }}"
+        assign_public_ip: true
+      register: clickhouse_vm
+
+    - name: Create Vector VM
+      aleksey_dubrovin.yandex_cloud_elk.yc_vm:
+        name: "vector-{{ timestamp }}"
+        folder_id: "{{ yc_folder_id }}"
+        subnet_name: "{{ yc_subnet_name }}"
+        zone: "{{ vm_zone }}"
+        ssh_key_path: "{{ vm_ssh_key_path }}"
+        vm_user: "{{ vm_default_user }}"
+        service_account_key: "{{ yc_service_account_key | default(omit) }}"
+        assign_public_ip: true
+      register: vector_vm
+
+    - name: Create Lighthouse VM
+      aleksey_dubrovin.yandex_cloud_elk.yc_vm:
+        name: "lighthouse-{{ timestamp }}"
+        folder_id: "{{ yc_folder_id }}"
+        subnet_name: "{{ yc_subnet_name }}"
+        zone: "{{ vm_zone }}"
+        ssh_key_path: "{{ vm_ssh_key_path }}"
+        vm_user: "{{ vm_default_user }}"
+        service_account_key: "{{ yc_service_account_key | default(omit) }}"
+        assign_public_ip: true
+      register: lighthouse_vm
+
+    - name: Generate dynamic inventory from Yandex Cloud
+      aleksey_dubrovin.yandex_cloud_elk.yc_inventory:
+        folder_id: "{{ yc_folder_id }}"
+        service_account_key: "{{ yc_service_account_key | default(omit) }}"
+        output_file: "{{ inventory_output_file }}"
+        ansible_user: "{{ vm_default_user }}"
+        group_by:
+          - ansible_group
+          - role
+          - app
 
 - name: Deploy ClickHouse
   hosts: clickhouse
   become: true
   roles:
-    - alexey.setevoi.clickhouse
+    - role: clickhouse
+      vars:
+        clickhouse_version: "22.3.3.44"
+        clickhouse_users:
+          - { name: "logger", password: "logger", profile: "default" }
+        clickhouse_dbs:
+          - { name: "logs" }
 
 - name: Deploy Vector
   hosts: vector
