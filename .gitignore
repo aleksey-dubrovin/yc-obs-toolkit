@@ -2,7 +2,7 @@
 roles/vector/
 roles/lighthouse/
 roles/clickhouse/
-
+inventory/*
 # Secrets
 vars/secrets.yml
 *.vault

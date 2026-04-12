@@ -6,17 +6,29 @@ yc_service_account_key: "{{ lookup('env', 'YC_SERVICE_ACCOUNT_KEY') | default(om
 
 # VM configuration
 vm_zone: ru-central1-b
+vm_image_family: ubuntu-2204-lts
+vm_ssh_key_path: "{{ lookup('env', 'HOME') }}/.ssh/aleksey.pub"
+vm_ssh_private_key: "{{ lookup('env', 'HOME') }}/.ssh/aleksey"
+vm_default_user: yc-user
+vm_platform_id: standard-v3
 vm_cores: 2
 vm_memory: 4
+vm_core_fraction: 20
 vm_disk_size: 20
 vm_disk_type: network-hdd
-vm_preemptible: true
 vm_assign_public_ip: true
-vm_ssh_key_path: "{{ lookup('env', 'HOME') }}/.ssh/aleksey.pub"
-vm_default_user: ubuntu                    # ← изменено с rocky на ubuntu
-vm_image_family: ubuntu-2204-lts           # ← добавлено
+vm_preemptible: true
 
-# Observability settings
+# Inventory
+inventory_output_file: "./inventory/inventory.yml"
+
+# Vector settings
+vector_data_dir: "/var/lib/vector"
+vector_clickhouse_port: 8123
+vector_clickhouse_database: "logs"
+vector_clickhouse_table: "syslog"
+
+# ClickHouse settings
 clickhouse_version: "22.3.3.44"
 clickhouse_users:
   - name: logger
@@ -24,10 +36,3 @@ clickhouse_users:
     profile: default
 clickhouse_dbs:
   - name: logs
-
-vector_clickhouse_port: 8123
-vector_clickhouse_database: "logs"
-vector_clickhouse_table: "syslog"
-
-# Inventory
-inventory_output_file: "./inventory_generated.yml"

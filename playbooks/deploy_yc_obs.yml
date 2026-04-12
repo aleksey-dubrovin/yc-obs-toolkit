@@ -1,109 +1,128 @@
 ---
 - name: Deploy observability stack on Yandex Cloud
-  hosts: localhost
+  hosts: local
   connection: local
   gather_facts: true
   vars_files:
-    ../group_vars/all.yml
+    - ../group_vars/all.yml
   vars:
-    timestamp: "{{ ansible_date_time.epoch }}"
+    inventory_dir: "../inventory"
+    inventory_file: "{{ inventory_dir }}/inventory.yml"
 
   tasks:
-    - name: Fail if no credentials provided
-      fail:
-        msg: |
-          Please set environment variables:
-            export YC_FOLDER_ID="b1gxxxxxxxxxxxx"
-            export YC_SUBNET_NAME="net-ru-central1-b"
-      when: 
-        - not yc_folder_id
-        - not yc_subnet_name
-
     - name: Create ClickHouse VM
       aleksey_dubrovin.yc_obs_toolkit.yc_vm:
-        name: "clickhouse-{{ timestamp }}"
+        name_prefix: "clickhouse"
         folder_id: "{{ yc_folder_id }}"
         subnet_name: "{{ yc_subnet_name }}"
         zone: "{{ vm_zone }}"
+        image_family: "{{ vm_image_family }}"
         ssh_key_path: "{{ vm_ssh_key_path }}"
         vm_user: "{{ vm_default_user }}"
-        service_account_key: "{{ yc_service_account_key | default(omit) }}"
         assign_public_ip: "{{ vm_assign_public_ip }}"
         cores: "{{ vm_cores }}"
         memory: "{{ vm_memory }}"
         disk_size: "{{ vm_disk_size }}"
         disk_type: "{{ vm_disk_type }}"
         preemptible: "{{ vm_preemptible }}"
+        labels:
+          ansible_group: clickhouse
+          role: database
+      tags:
+        - create_vms
       register: clickhouse_vm
 
     - name: Create Vector VM
       aleksey_dubrovin.yc_obs_toolkit.yc_vm:
-        name: "vector-{{ timestamp }}"
+        name_prefix: "vector"
         folder_id: "{{ yc_folder_id }}"
         subnet_name: "{{ yc_subnet_name }}"
         zone: "{{ vm_zone }}"
+        image_family: "{{ vm_image_family }}"
         ssh_key_path: "{{ vm_ssh_key_path }}"
         vm_user: "{{ vm_default_user }}"
-        service_account_key: "{{ yc_service_account_key | default(omit) }}"
         assign_public_ip: "{{ vm_assign_public_ip }}"
         cores: "{{ vm_cores }}"
         memory: "{{ vm_memory }}"
         disk_size: "{{ vm_disk_size }}"
         disk_type: "{{ vm_disk_type }}"
         preemptible: "{{ vm_preemptible }}"
+        labels:
+          ansible_group: vector
+          role: log-collector
+      tags:
+        - create_vms
       register: vector_vm
 
     - name: Create Lighthouse VM
       aleksey_dubrovin.yc_obs_toolkit.yc_vm:
-        name: "lighthouse-{{ timestamp }}"
+        name_prefix: "lighthouse"
         folder_id: "{{ yc_folder_id }}"
         subnet_name: "{{ yc_subnet_name }}"
         zone: "{{ vm_zone }}"
+        image_family: "{{ vm_image_family }}"
         ssh_key_path: "{{ vm_ssh_key_path }}"
         vm_user: "{{ vm_default_user }}"
-        service_account_key: "{{ yc_service_account_key | default(omit) }}"
         assign_public_ip: "{{ vm_assign_public_ip }}"
         cores: "{{ vm_cores }}"
         memory: "{{ vm_memory }}"
         disk_size: "{{ vm_disk_size }}"
         disk_type: "{{ vm_disk_type }}"
         preemptible: "{{ vm_preemptible }}"
+        labels:
+          ansible_group: lighthouse
+          role: web-ui
+      tags:
+        - create_vms
       register: lighthouse_vm
 
     - name: Generate dynamic inventory
       aleksey_dubrovin.yc_obs_toolkit.yc_inventory:
         folder_id: "{{ yc_folder_id }}"
         service_account_key: "{{ yc_service_account_key | default(omit) }}"
-        output_file: "{{ inventory_output_file }}"
+        output_dir: "{{ inventory_dir }}"
         ansible_user: "{{ vm_default_user }}"
+        ansible_ssh_private_key_file: "{{ vm_ssh_private_key | default(lookup('env', 'HOME') + '/.ssh/aleksey') }}"
         group_by:
           - ansible_group
           - role
+      tags:
+        - inventory
+      register: inventory_result
 
 - name: Deploy ClickHouse
   hosts: clickhouse
   become: true
+  gather_facts: true
+  tags:
+    - deploy
+    - clickhouse
   roles:
     - role: clickhouse
-      vars:
-        clickhouse_version: "{{ clickhouse_version }}"
-        clickhouse_users: "{{ clickhouse_users }}"
-        clickhouse_dbs: "{{ clickhouse_dbs }}"
 
 - name: Deploy Vector
   hosts: vector
   become: true
+  gather_facts: yes
+  tags:
+    - deploy
+    - vector
+  vars:
+    clickhouse_host: "{{ hostvars[groups['clickhouse'][0]]['ansible_host'] }}"
+    clickhouse_port: "{{ vector_clickhouse_port }}"
+    clickhouse_database: "{{ vector_clickhouse_database }}"
+    clickhouse_table: "{{ vector_clickhouse_table }}"
+    vector_data_dir: "{{ vector_data_dir | default('/var/lib/vector') }}"
   roles:
     - role: vector
-      vars:
-        clickhouse_host: "{{ hostvars[groups['clickhouse'][0]]['ansible_host'] }}"
-        clickhouse_port: "{{ vector_clickhouse_port }}"
-        clickhouse_database: "{{ vector_clickhouse_database }}"
-        clickhouse_table: "{{ vector_clickhouse_table }}"
 
 - name: Deploy Lighthouse
   hosts: lighthouse
   become: true
+  gather_facts: true
+  tags:
+    - deploy
+    - lighthouse
   roles:
     - role: lighthouse
       vars:
@@ -112,6 +131,9 @@
 - name: Test file_writer module
   hosts: all
   become: true
+  tags:
+    - test
+    - file_writer
   roles:
     - role: file_writer_role
       vars:
