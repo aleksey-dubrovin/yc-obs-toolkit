@@ -1,8 +1,5 @@
 # Installed roles
-roles/vector/
-roles/lighthouse/
-roles/clickhouse/
-inventory/*
+inventory/inventory.yml
 # Secrets
 vars/secrets.yml
 *.vault

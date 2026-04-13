@@ -18,21 +18,3 @@ vm_disk_size: 20
 vm_disk_type: network-hdd
 vm_assign_public_ip: true
 vm_preemptible: true
-
-# Inventory
-inventory_output_file: "./inventory/inventory.yml"
-
-# Vector settings
-vector_data_dir: "/var/lib/vector"
-vector_clickhouse_port: 8123
-vector_clickhouse_database: "logs"
-vector_clickhouse_table: "syslog"
-
-# ClickHouse settings
-clickhouse_version: "22.3.3.44"
-clickhouse_users:
-  - name: logger
-    password: logger
-    profile: default
-clickhouse_dbs:
-  - name: logs

@@ -6,7 +6,7 @@ readme: README.md
 authors:
   - Aleksey Dubrovin <aleksey.vladch@yandex.ru>
 description: >
-  Ansible collection for deploying observability stack (ClickHouse, Vector, Lighthouse)
+  Ansible collection for deploying observability stack
   on Yandex Cloud with EDA, ADK, and AEE support.
 license:
   - GPL-3.0-or-later
@@ -16,9 +16,6 @@ tags:
   - eda
   - adk
   - aee
-  - clickhouse
-  - vector
-  - lighthouse
   - netology
 repository: https://github.com/aleksey-dubrovin/yc-obs-toolkit
 documentation: https://github.com/aleksey-dubrovin/yc-obs-toolkit

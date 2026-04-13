@@ -1,0 +1,32 @@
+---
+- name: Send notification to MAX bot
+  hosts: localhost
+  gather_facts: false
+  vars:
+    max_bot_token: "{{ lookup('env', 'MAX_BOT_TOKEN') }}"
+    max_chat_id: "{{ lookup('env', 'MAX_CHAT_ID') }}"
+  tasks:
+    - name: Send message to MAX
+      uri:
+        url: "https://api.max.ru/v1/messages"
+        method: POST
+        headers:
+          Authorization: "Bearer {{ max_bot_token }}"
+          Content-Type: "application/json"
+        body:
+          chat_id: "{{ max_chat_id }}"
+          text: |
+            🔔 **EDA Alert!**
+            
+            Файл был изменён на хосте: {{ event.host }}
+            Путь: {{ event.path }}
+            Время: {{ event.time | default(ansible_date_time.iso8601) }}
+            
+            Действие: {{ event.event_type }}
+        body_format: json
+      register: result
+      ignore_errors: yes
+    
+    - name: Debug result
+      debug:
+        msg: "Notification sent: {{ result.status }}"
